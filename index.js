@@ -275,6 +275,7 @@ canvas.addEventListener("mousedown", (e) => {
           selectedPiece = {}
           drawBoard()
           drawUnusedPieces()
+          canvas.removeEventListener("mousemove", drawSelectedPiece)
           return
         }
         const pieceX = x - selectedPiece.xDiff + canvas.width / 16
@@ -303,10 +304,10 @@ canvas.addEventListener("mousedown", (e) => {
       yDiff = y - pieceY + pieceSettings.radius / 2
     selectedPiece.xDiff = xDiff
     selectedPiece.yDiff = yDiff
+    selectedPiece.fromBoard = true
     const origin = piecePositions[piece]
     removeConstPiece(selectedPiece.piece)
     piecePositions[piece] = null
-    console.log({ selectedPiece })
     canvas.addEventListener("mousemove", drawSelectedPiece)
     addEventListener(
       "mouseup",
@@ -318,6 +319,7 @@ canvas.addEventListener("mousedown", (e) => {
           drawBoard()
           drawUnusedPieces()
           selectedPiece = {}
+          canvas.removeEventListener("mousemove", drawSelectedPiece)
           return
         }
         const [row, col] = getBoardDimensions(
@@ -332,6 +334,7 @@ canvas.addEventListener("mousedown", (e) => {
         drawBoard()
         drawUnusedPieces()
         selectedPiece = {}
+        canvas.removeEventListener("mousemove", drawSelectedPiece)
       },
       { once: true }
     )
@@ -341,15 +344,20 @@ canvas.addEventListener("mousedown", (e) => {
 function drawSelectedPiece(e) {
   if (!Object.keys(selectedPiece).length)
     return console.log("no selected piece")
-  console.log("selected piece from drawSelectedPiece function:", selectedPiece)
   drawBoard()
   drawUnusedPieces()
   const { top, left } = canvas.getBoundingClientRect()
   drawPiece(
     selectedPiece.piece,
     selectedPiece.rotation,
-    e.clientX - left - selectedPiece.xDiff + canvas.width / 16,
-    e.clientY - top - selectedPiece.yDiff + pieceSettings.radius * 5
+    e.clientX -
+      left -
+      selectedPiece.xDiff +
+      (selectedPiece.fromBoard ? 0 : canvas.width / 16),
+    e.clientY -
+      top -
+      selectedPiece.yDiff +
+      (selectedPiece.fromBoard ? 0 : pieceSettings.radius * 5)
   )
 }
 
@@ -370,7 +378,8 @@ rotatePiecesButton.addEventListener("click", () => {
 })
 
 solveButton.addEventListener("click", () => {
-  console.log("solving...")
+  ctx.texAlign = "center"
+  ctx.fillText("Not Solvable!", canvas.height / 5, canvas.width / 2)
   const solved = solve()
   console.log({ solved })
   if (!solved) return
