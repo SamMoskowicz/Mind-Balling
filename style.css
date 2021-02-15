@@ -14,6 +14,8 @@ header {
   display: flex;
   justify-content: space-around;
   padding: 20px;
+  padding-right: 100px;
+  padding-left: 100px;
 }
 
 #bottom button {

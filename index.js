@@ -3,6 +3,7 @@ const canvas = document.getElementById("canvas")
 const ctx = canvas.getContext("2d")
 const rotatePiecesButton = document.getElementById("rotate-pieces")
 const solveButton = document.getElementById("solve-button")
+const newGameButton = document.getElementById("new-game-button")
 
 let board = new Array(10)
 for (let i = 0; i < board.length; i++) board[i] = new Array(10).fill(null)
@@ -296,6 +297,7 @@ canvas.addEventListener("mousedown", (e) => {
   } else if (isInBoard(x, y)) {
     const [row, col] = getBoardDimensions(x, y)
     const piece = board[row][col]
+    if (piece == null) return
     const [rotation, pieceRow, pieceCol] = piecePositions[piece]
     selectedPiece.piece = piece
     selectedPiece.rotation = rotation
@@ -378,12 +380,36 @@ rotatePiecesButton.addEventListener("click", () => {
 })
 
 solveButton.addEventListener("click", () => {
-  ctx.texAlign = "center"
-  ctx.fillText("Not Solvable!", canvas.height / 5, canvas.width / 2)
+  console.log("Solving...")
   const solved = solve()
   console.log({ solved })
-  if (!solved) return
-  unusedPieces.fill(null)
+  if (!solved) {
+    ctx.textAlign = "center"
+    drawBoard()
+    drawUnusedPieces()
+    for (let i = 0; i < 12; i++) {
+      if (!constPieces[i]) {
+        if (piecePositions[i]) removePiece(i)
+        unusedPieces[i] = 0
+      }
+    }
+    ctx.textAlign = "center"
+    ctx.font = "30px Arial"
+    ctx.fillText("Not Solvable!", canvas.width / 4, canvas.height / 5)
+  } else {
+    unusedPieces.fill(null)
+    drawBoard()
+    drawUnusedPieces()
+  }
+})
+
+newGameButton.addEventListener("click", () => {
+  for (let row of board) for (let i = 0; i < row.length; i++) row[i] = null
+  for (let i = 0; i < 12; i++) {
+    piecePositions[i] = null
+    unusedPieces[i] = 0
+    constPieces[i] = null
+  }
   drawBoard()
   drawUnusedPieces()
 })
