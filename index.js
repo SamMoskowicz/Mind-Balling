@@ -393,6 +393,7 @@ solveButton.addEventListener("click", () => {
         unusedPieces[i] = 0
       }
     }
+    ctx.fillStyle = "black"
     ctx.textAlign = "center"
     ctx.font = "30px Arial"
     ctx.fillText("Not Solvable!", canvas.width / 4, canvas.height / 5)
