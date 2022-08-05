@@ -159,7 +159,19 @@ for (let piece of pieces) {
   allPieces.push(getAllRotations(piece))
 }
 
-fs.writeFile(__dirname + "/madePieces.js", JSON.stringify(allPieces), (err) => {
-  if (err) console.log("Error Occurred:", err)
-  else console.log("successfully wrote to file")
-})
+// console.log("first piece:", allPieces[0][0])
+
+// // console.log("pieces:", JSON.stringify(allPieces))
+
+// allPieces.sort((a, b) => b[0].length - a[0].length)
+
+// console.log("pieces after sorting:", JSON.stringify(allPieces))
+
+fs.writeFile(
+  __dirname + "/madePieces.js",
+  "module.export = " + JSON.stringify(allPieces),
+  (err) => {
+    if (err) console.log("Error Occurred:", err)
+    else console.log("successfully wrote to file")
+  }
+)

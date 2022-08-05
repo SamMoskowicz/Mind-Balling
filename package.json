@@ -8,7 +8,7 @@
     "start-dev": "nodemon server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Shmuel Moskowicz",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",

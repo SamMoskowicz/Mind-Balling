@@ -8,19 +8,33 @@ const newGameButton = document.getElementById("new-game-button")
 let board = new Array(10)
 for (let i = 0; i < board.length; i++) board[i] = new Array(10).fill(null)
 
+// const pieceColors = [
+//   "white",
+//   "hotPink",
+//   "yellow",
+//   "blue",
+//   "green",
+//   "yellow",
+//   "blue",
+//   "white",
+//   "red",
+//   "green",
+//   "red",
+//   "hotPink",
+// ]
 const pieceColors = [
+  "red",
+  "blue",
+  "hotPink",
   "white",
+  "blue",
+  "yellow",
   "hotPink",
   "yellow",
-  "blue",
-  "green",
-  "yellow",
-  "blue",
   "white",
-  "red",
   "green",
   "red",
-  "hotPink",
+  "green",
 ]
 const piecePositions = new Array(12).fill(null)
 let remainingPieces = 12
@@ -61,27 +75,135 @@ function removeConstPiece(piece) {
   removePiece(piece)
 }
 
-function solve() {
-  function dfs(piece) {
-    if (piece === 12) return true
-    if (constPieces[piece]) {
-      if (dfs(piece + 1)) return true
-      return false
+// function getBestPos() {
+//   const visited = []
+//   let best = 100
+//   let res = [10, 10]
+//   for (let i = 0; i < 9; i++) visited[i] = new Array(9).fill(false)
+//   for (let r = 0; r < 9; r++) {
+//     for (let c = 0; c + r < 9; c++) {
+//       if (board[r][c] !== null) continue
+//       if (visited[r][c]) continue
+//       let curr = 0
+//       outer: while (curr + r <= 9 && curr + c <= 9) {
+//         // console.log("curr:", curr)
+//         for (let currRow = r; currRow <= r + curr; currRow++) {
+//           const currCol = c + curr
+//           if (currRow + currCol > 9) break outer
+//           if (board[currRow][currCol] !== null) break outer
+//         }
+//         for (let currCol = c; currCol < c + curr; currCol++) {
+//           const currRow = r + curr
+//           if (currRow + currCol > 9) break outer
+//           if (board[currRow][currCol] !== null) break outer
+//         }
+//         for (let currRow = r; currRow <= r + curr; currRow++) {
+//           const currCol = c + curr
+//           visited[currRow][currCol] = true
+//         }
+//         for (let currCol = c; currCol < c + curr; currCol++) {
+//           const currRow = r + curr
+//           visited[currRow][currCol] = true
+//         }
+//         curr++
+//       }
+//       // console.log("r:", r, "c:", c, "curr:", curr)
+//       if (curr < best) {
+//         best = curr
+//         res = [r, c]
+//       }
+//     }
+//   }
+//   return res
+// }
+
+// let cnt = 0
+// const backtrack = []
+// const startTime = Date.now()
+// function countWays() {
+//   if (remainingPieces <= 0) {
+//     console.log("curr count", ++cnt)
+//     console.log("time since start:", (Date.now() - startTime) / 1000)
+//     console.log("backtrack:", backtrack)
+//     console.log(
+//       "average ways per second:",
+//       (cnt / (Date.now() - startTime)) * 1000
+//     )
+//     // console.log("piece positions:", piecePositions)
+//     // console.log("board:", board)
+//   }
+//   if (!remainingPieces) return 1
+//   const [row, col] = getBestPos()
+//   // console.log("row:", row, "col:", col)
+//   let res = 0
+//   for (let piece = 0; piece < 12; piece++) {
+//     if (piecePositions[piece]) continue
+//     for (let rotation = 0; rotation < pieces[piece].length; rotation++) {
+//       for (let coords = 0; coords < pieces[piece][rotation].length; coords++) {
+//         if (remainingPieces === 12) {
+//           const pieceCount = 12
+//           const rotationCount = pieces[piece].length * pieceCount
+//           const coordsCount = pieces[piece][rotation].length * rotationCount
+//           console.log(
+//             (piece / pieceCount) * 100 +
+//               (rotation / rotationCount) * 100 +
+//               (coords / coordsCount) * 100
+//           )
+//         }
+//         const currRow = row - pieces[piece][rotation][coords][0]
+//         const currCol = col - pieces[piece][rotation][coords][1]
+//         if (!canAddPiece(piece, rotation, currRow, currCol)) continue
+//         backtrack[12 - remainingPieces] = [piece, rotation, coords]
+//         addPiece(piece, rotation, currRow, currCol)
+//         res += countWays()
+//         removePiece(piece, rotation, currRow, currCol)
+//       }
+//     }
+//   }
+//   return res
+// }
+
+// console.log(countWays())
+
+// function solve() {
+//   function dfs(piece) {
+//     if (piece === 12) return true
+//     if (constPieces[piece]) {
+//       if (dfs(piece + 1)) return true
+//       return false
+//     }
+//     for (let rotation = 0; rotation < pieces[piece].length; rotation++) {
+//       for (let row = 0; row < 10; row++) {
+//         for (let col = 0; row + col < 10; col++) {
+//           if (canAddPiece(piece, rotation, row, col)) {
+//             addPiece(piece, rotation, row, col)
+//             if (dfs(piece + 1)) return true
+//             removePiece(piece)
+//           }
+//         }
+//       }
+//     }
+//     return false
+//   }
+//   return dfs(0)
+// }
+
+function findAllMatches() {
+  const res = []
+  for (let i = 0; i < allPossible.length; i += 100) {
+    let j = i
+    for (; j < i + 100; j++) {
+
+      const r = Math.floor((j - i) / 10)
+      const c = j % 10
+      if (r + c >= 10) continue
+      if (board[r][c] === null || board[r][c] === -1) continue
+      // console.log("r:", r, "c:", c)
+      if (board[r][c] !== allPossible[j]) break
     }
-    for (let rotation = 0; rotation < pieces[piece].length; rotation++) {
-      for (let row = 0; row < 10; row++) {
-        for (let col = 0; row + col < 10; col++) {
-          if (canAddPiece(piece, rotation, row, col)) {
-            addPiece(piece, rotation, row, col)
-            if (dfs(piece + 1)) return true
-            removePiece(piece)
-          }
-        }
-      }
-    }
-    return false
+    if (j === i + 100) res.push(i)
   }
-  return dfs(0)
+  return res
 }
 
 function clear() {
@@ -379,11 +501,58 @@ rotatePiecesButton.addEventListener("click", () => {
   drawUnusedPieces()
 })
 
+function findRotation(board, row, col) {
+  const piece = board[row][col]
+  for (let rot = 0; rot < pieces[piece].length; rot++) {
+    let i = 0
+    for (; i < pieces[piece][rot].length; i++) {
+      const r = row + pieces[piece][rot][i][0]
+      const c = col + pieces[piece][rot][i][1]
+      if (r < 0 || c < 0 || r + c >= 10) break
+      if (board[r][c] !== board[row][col]) break
+    }
+    if (i === pieces[piece][rot].length) return rot
+  }
+  return -1
+}
+
+function makeBoardFromPossible(i) {
+  const res = []
+  for (let r = 0; r < 10; r++) {
+    res.push([])
+    for (let c = 0; c < 10; c++) {
+      res[r][c] = allPossible[i + r * 10 + c]
+    }
+  }
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      if (r + c >= 10) continue
+      if (!piecePositions[res[r][c]]) {
+        const rotation = findRotation(res, r, c)
+        if (rotation > -1)
+        piecePositions[res[r][c]] = [rotation, r, c]
+      }
+    }
+  }
+  return res
+}
+
+function shuffle(arr) {
+  for (let i = 1; i < arr.length; i++) {
+    const rand = Math.floor(Math.random() * (i + 1))
+    const temp = arr[i]
+    arr[i] = arr[rand]
+    arr[rand] = temp
+  }
+}
+
 solveButton.addEventListener("click", () => {
-  console.log("Solving...")
-  const solved = solve()
-  console.log({ solved })
-  if (!solved) {
+  // console.log("Solving...")
+  // const solved = solve()
+  // console.log("solved?", solved)
+  const matches = findAllMatches()
+  shuffle(matches)
+  if (!matches.length) {
     ctx.textAlign = "center"
     drawBoard()
     drawUnusedPieces()
@@ -399,6 +568,7 @@ solveButton.addEventListener("click", () => {
     ctx.fillText("Not Solvable!", canvas.width / 4, canvas.height / 5)
   } else {
     unusedPieces.fill(null)
+    board = makeBoardFromPossible(matches[0])
     drawBoard()
     drawUnusedPieces()
   }
