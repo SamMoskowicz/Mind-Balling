@@ -10,16 +10,13 @@ int remainingPieces = 12;
 
 int board[10][10];
 
-std::chrono::_V2::system_clock::time_point start = std::chrono::high_resolution_clock::now();
-
 void printBoard()
 {
-    for (int r = 0; r < 10; r++)
+    for (int r = 0; r < 10; ++r)
     {
-        for (int c = 0; c < 10; c++)
+        for (int c = 0; c < 10; ++c)
         {
             std::cout << board[r][c] << ", ";
-            ;
         }
         std::cout << std::endl;
     }
@@ -30,7 +27,7 @@ bool canAddPiece(int piece, int rotation, int row, int col)
 {
     if (usedPieces[piece])
         return false;
-    for (int coord = 0; coord < pieceLens[piece]; coord++)
+    for (int coord = 0; coord < pieceLens[piece]; ++coord)
     {
         int currRow = pieces[piece][rotation][coord][0] + row;
         int currCol = pieces[piece][rotation][coord][1] + col;
@@ -44,7 +41,7 @@ bool canAddPiece(int piece, int rotation, int row, int col)
 
 void addPiece(int piece, int rotation, int row, int col)
 {
-    for (int coord = 0; coord < pieceLens[piece]; coord++)
+    for (int coord = 0; coord < pieceLens[piece]; ++coord)
     {
         int currRow = pieces[piece][rotation][coord][0] + row;
         int currCol = pieces[piece][rotation][coord][1] + col;
@@ -56,7 +53,7 @@ void addPiece(int piece, int rotation, int row, int col)
 
 void removePiece(int piece, int rotation, int row, int col)
 {
-    for (int coord = 0; coord < pieceLens[piece]; coord++)
+    for (int coord = 0; coord < pieceLens[piece]; ++coord)
     {
         int currRow = pieces[piece][rotation][coord][0] + row;
         int currCol = pieces[piece][rotation][coord][1] + col;
@@ -83,29 +80,28 @@ void generateAll()
     // std::cout << std::endl;
     if (i == 81)
     {
-        for (int r = 0; r < 10; r++)
-            for (int c = 0; c < 10; c++)
+        for (int r = 0; r < 10; ++r)
+            for (int c = 0; c < 10; ++c)
                 res[resLen][r][c] = board[r][c];
         resLen++;
-        std::chrono::_V2::system_clock::time_point now = std::chrono::high_resolution_clock::now();
-        double totalSeconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() / 1000.0;
-        std::cout << "res len: " << resLen << ", total seconds: " << totalSeconds << ", average ways per second: " << resLen / totalSeconds << std::endl;
+
+        // std::cout << "res len: " << resLen << ", total seconds: " << totalSeconds << ", average ways per second: " << resLen / totalSeconds << std::endl;
         return;
     }
     int row = i / 10;
     int col = i % 10;
     if (row + col >= 10 || board[row][col] > -1)
     {
-        i++;
+        ++i;
         generateAll();
-        i--;
+        --i;
         return;
     }
     // std::cout << "row: " << row << ", col: " << col << std::endl;
-    i++;
-    for (int piece = 0; piece < 12; piece++)
+    ++i;
+    for (int piece = 0; piece < 12; ++piece)
     {
-        for (int rot = 0; rot < rotationLens[piece]; rot++)
+        for (int rot = 0; rot < rotationLens[piece]; ++rot)
         {
             // std::cout << "piece: " << piece << ", rot: " << rot << std::endl;
             // std::cout << "can add piece: " << canAddPiece(piece, rot, row, col) << std::endl;
@@ -128,15 +124,21 @@ bool visited[10][10] = {};
 
 std::pair<int, int> getBestPos()
 {
-    for (int i = 0; i < 10; i++)
-        for (int j = 0; j < 10; j++)
+    for (int i = 0; i < 10; ++i)
+        for (int j = 0; j < 10; ++j)
             visited[i][j] = false;
     int bestLen = 100;
     std::pair<int, int> bestPos = {10, 10};
     for (int r = 0; r < 10; r++)
     {
-        for (int c = 0; c <10; c++)
+        for (int c = 0; c < 10; ++c)
         {
+            if (c + r >= 10)
+                break;
+            if (board[r][c] > -1)
+                continue;
+            if (visited[r][c])
+                continue;
             int curr = 0;
             while (curr + r < 10 && curr + c < 10)
             {
@@ -149,7 +151,7 @@ std::pair<int, int> getBestPos()
                     if (board[currRow][lastCol] > -1)
                         goto nxt;
                 }
-                for (int currCol = c; currCol < lastCol; currCol++)
+                for (int currCol = c; currCol <= lastCol; currCol++)
                 {
                     if (lastRow + currCol >= 10)
                         goto nxt;
@@ -164,7 +166,7 @@ std::pair<int, int> getBestPos()
                 {
                     visited[lastRow][currCol] = true;
                 }
-                curr++;
+                ++curr;
             }
         nxt:
             if (curr < bestLen)
@@ -180,30 +182,38 @@ std::pair<int, int> getBestPos()
 
 void generateAll2()
 {
+    if (remainingPieces < 2)
+    {
+        // std::cout << "remainingPieces: " << remainingPieces << std::endl;
+        // printBoard();
+    }
     if (!remainingPieces)
     {
-        for (int r = 0; r < 10; r++)
-            for (int c = 0; c < 10; c++)
+        for (int r = 0; r < 10; ++r)
+            for (int c = 0; c < 10; ++c)
                 res[resLen][r][c] = board[r][c];
         resLen++;
         return;
     }
     std::pair<int, int> bestPos = getBestPos();
+    // std::cout << "bestPos: " << bestPos.first << ", " << bestPos.second << std::endl;
     for (int piece = 0; piece < 12; piece++)
     {
         if (usedPieces[piece])
             continue;
-        for (int rot = 0; rot < rotationLens[piece]; rot++)
+        for (int rot = 0; rot < rotationLens[piece]; ++rot)
         {
-            for (int coord = 0; coord < pieceLens[piece]; coord++)
+            for (int coord = 0; coord < pieceLens[piece]; ++coord)
             {
                 int currRow = bestPos.first - pieces[piece][rot][coord][0];
                 int currCol = bestPos.second - pieces[piece][rot][coord][1];
+                // std::cout << "piece: " << piece << ", currRow: " << currRow << ", currCol: " << currCol << std::endl;
                 if (!canAddPiece(piece, rot, currRow, currCol))
                     continue;
-                addPiece(piece, rot, bestPos.first, bestPos.second);
+                // std::cout << "can add piece\n";
+                addPiece(piece, rot, currRow, currCol);
                 generateAll2();
-                removePiece(piece, rot, bestPos.first, bestPos.second);
+                removePiece(piece, rot, currRow, currCol);
             }
         }
     }
@@ -240,23 +250,29 @@ void generateAll2()
 int main()
 {
 
-    for (int r = 0; r < 10; r++)
+    for (int r = 0; r < 10; ++r)
     {
-        for (int c = 0; c < 10; c++)
+        for (int c = 0; c < 10; ++c)
         {
             board[r][c] = -1;
         }
     }
+
+    std::chrono::_V2::system_clock::time_point start = std::chrono::high_resolution_clock::now();
     generateAll();
+    std::chrono::_V2::system_clock::time_point now = std::chrono::high_resolution_clock::now();
+    double totalSeconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() / 1000.0;
+    std::cout << "total seconds: " << totalSeconds << std::endl;
+    std::cout << "res len: " << resLen << std::endl;
     std::ofstream resFile("res");
     resFile << "{";
-    for (int i = 0; i < resLen; i++)
+    for (int i = 0; i < resLen; ++i)
     {
         resFile << "{";
-        for (int r = 0; r < 10; r++)
+        for (int r = 0; r < 10; ++r)
         {
             resFile << "{";
-            for (int c = 0; c < 10; c++)
+            for (int c = 0; c < 10; ++c)
             {
                 resFile << std::to_string(res[i][r][c]);
                 if (c < 9)

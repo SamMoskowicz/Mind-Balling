@@ -4,9 +4,12 @@ const ctx = canvas.getContext("2d")
 const rotatePiecesButton = document.getElementById("rotate-pieces")
 const solveButton = document.getElementById("solve-button")
 const newGameButton = document.getElementById("new-game-button")
+const shapeInput = document.getElementById("shape")
+
+let shape = shapeInput.value
 
 let board = new Array(10)
-for (let i = 0; i < board.length; i++) board[i] = new Array(10).fill(null)
+for (let i = 0; i < board.length; i++) board[i] = new Array(11).fill(null)
 
 // const pieceColors = [
 //   "white",
@@ -23,18 +26,18 @@ for (let i = 0; i < board.length; i++) board[i] = new Array(10).fill(null)
 //   "hotPink",
 // ]
 const pieceColors = [
-  "red",
-  "blue",
-  "hotPink",
-  "white",
-  "blue",
-  "yellow",
-  "hotPink",
-  "yellow",
-  "white",
-  "green",
-  "red",
-  "green",
+  "#fd9722",
+  "#db1a1b",
+  "#107faa",
+  "#fdd6d1",
+  "#008746",
+  "#fefefe",
+  "#cae6f5",
+  "#f07aad",
+  "#fff018",
+  "#9e0a71",
+  "#b6d75b",
+  "#bdbdbf",
 ]
 const piecePositions = new Array(12).fill(null)
 let remainingPieces = 12
@@ -48,11 +51,21 @@ function addPiece(piece, rotation, row, col) {
 }
 
 function canAddPiece(piece, rotation, row, col) {
-  for (let coords of pieces[piece][rotation]) {
-    const currRow = coords[0] + row
-    const currCol = coords[1] + col
-    if (currRow < 0 || currCol < 0 || currRow + currCol > 9) return false
-    if (board[currRow][currCol] != null) return false
+  if (shape === "rectangle") {
+    for (let coords of pieces[piece][rotation]) {
+      const currRow = coords[0] + row
+      const currCol = coords[1] + col
+      if (currRow < 0 || currRow >= 5 || currCol < 0 || currCol >= 11)
+        return false
+      if (board[currRow][currCol] != null) return false
+    }
+  } else {
+    for (let coords of pieces[piece][rotation]) {
+      const currRow = coords[0] + row
+      const currCol = coords[1] + col
+      if (currRow < 0 || currCol < 0 || currRow + currCol > 9) return false
+      if (board[currRow][currCol] != null) return false
+    }
   }
   return true
 }
@@ -190,18 +203,30 @@ function removeConstPiece(piece) {
 
 function findAllMatches() {
   const res = []
-  for (let i = 0; i < allPossible.length; i += 100) {
-    let j = i
-    for (; j < i + 100; j++) {
-
-      const r = Math.floor((j - i) / 10)
-      const c = j % 10
-      if (r + c >= 10) continue
-      if (board[r][c] === null || board[r][c] === -1) continue
-      // console.log("r:", r, "c:", c)
-      if (board[r][c] !== allPossible[j]) break
+  if (shape === "rectangle") {
+    for (let i = 0; i < allPossible2.length; i += 55) {
+      let j = i
+      for (; j < i + 55; j++) {
+        const r = Math.floor((j - i) / 11)
+        const c = (j - i) % 11
+        if (board[r][c] === null || board[r][c] === -1) continue
+        if (board[r][c] !== allPossible2[j]) break
+      }
+      if (j === i + 55) res.push(i)
     }
-    if (j === i + 100) res.push(i)
+  } else {
+    for (let i = 0; i < allPossible.length; i += 100) {
+      let j = i
+      for (; j < i + 100; j++) {
+        const r = Math.floor((j - i) / 10)
+        const c = j % 10
+        if (r + c >= 10) continue
+        if (board[r][c] === null || board[r][c] === -1) continue
+        // console.log("r:", r, "c:", c)
+        if (board[r][c] !== allPossible[j]) break
+      }
+      if (j === i + 100) res.push(i)
+    }
   }
   return res
 }
@@ -217,7 +242,7 @@ const pieceSettings = {}
 
 function initSettings(size) {
   pieceSettings.radius = size / 100
-  pieceSettings.space = pieceSettings.radius * Math.sqrt(2.5)
+  pieceSettings.space = pieceSettings.radius * Math.sqrt(2.5) * Math.sqrt(2)
   canvas.width = size
   canvas.height = size / 2
   boardSettings.size = canvas.height
@@ -228,88 +253,167 @@ initSettings(900)
 ctx.fillRect(0, 0, boardSettings.width, boardSettings.height)
 
 function drawPiece(piece, rotation, x, y) {
-  ctx.fillStyle = pieceColors[piece]
-  ctx.strokeStyle = pieceColors[piece]
-  const visited = new Set()
-  for (let coords of pieces[piece][rotation]) {
-    ctx.beginPath()
-    ctx.arc(
-      x + (coords[1] - coords[0]) * pieceSettings.space,
-      y + (coords[1] + coords[0]) * pieceSettings.space,
-      pieceSettings.radius,
-      0,
-      Math.PI * 2
-    )
-    ctx.fill()
-    ctx.closePath()
-    const neighbors = [
-      [0, 1],
-      [0, -1],
-      [1, 0],
-      [-1, 0],
-    ]
-    for (let nbr of neighbors) {
-      const currY = nbr[0] + coords[0]
-      const currX = nbr[1] + coords[1]
-      if (visited.has([currY, currX].join())) {
-        ctx.beginPath()
-        ctx.moveTo(
-          x + (coords[1] - coords[0]) * pieceSettings.space,
-          y + (coords[1] + coords[0]) * pieceSettings.space
-        )
-        ctx.lineTo(
-          x + (currX - currY) * pieceSettings.space,
-          y + (currY + currX) * pieceSettings.space
-        )
-        ctx.lineWidth = pieceSettings.radius / 2
-        ctx.stroke()
-        ctx.closePath()
-      }
-    }
-    visited.add(coords.join())
-  }
-}
-
-function drawBoard() {
-  ctx.fillStyle = "gray"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-  ctx.fillStyle = "black"
-  ctx.beginPath()
-  ctx.moveTo(boardSettings.size / 2, 0.5 * boardSettings.size)
-  ctx.lineTo(
-    boardSettings.size - 3.5 * pieceSettings.space,
-    boardSettings.size - 3.5 * pieceSettings.space
-  )
-  ctx.lineTo(
-    3.5 * pieceSettings.space,
-    boardSettings.size - 3.5 * pieceSettings.space
-  )
-  ctx.lineTo(boardSettings.size / 2, 0.5 * boardSettings.size)
-  ctx.closePath()
-  ctx.fill()
-  for (let i = 0; i < 10; i++) {
-    for (let j = 0; j < 10; j++) {
-      if (j + i > 9) break
-      ctx.fillStyle = "gray"
+  if (shape === "rectangle") {
+    const sqrt2 = Math.sqrt(2)
+    ctx.fillStyle = pieceColors[piece]
+    ctx.strokeStyle = pieceColors[piece]
+    const visited = new Set()
+    for (let coords of pieces[piece][rotation]) {
       ctx.beginPath()
       ctx.arc(
-        boardSettings.size / 2 + (j - i) * pieceSettings.space,
-        boardSettings.size / 2 +
-          2 * pieceSettings.space +
-          (i + j) * pieceSettings.space,
+        x + coords[1] * pieceSettings.space,
+        y + coords[0] * pieceSettings.space,
         pieceSettings.radius,
         0,
         Math.PI * 2
       )
       ctx.fill()
       ctx.closePath()
+      const neighbors = [
+        [0, 1],
+        [0, -1],
+        [1, 0],
+        [-1, 0],
+      ]
+      for (let nbr of neighbors) {
+        const currY = nbr[0] + coords[0]
+        const currX = nbr[1] + coords[1]
+        if (visited.has([currY, currX].join())) {
+          ctx.beginPath()
+          ctx.moveTo(
+            x + coords[1] * pieceSettings.space,
+            y + coords[0] * pieceSettings.space
+          )
+          ctx.lineTo(
+            x + currX * pieceSettings.space,
+            y + currY * pieceSettings.space
+          )
+          ctx.lineWidth = pieceSettings.radius / 2
+          ctx.stroke()
+          ctx.closePath()
+        }
+      }
+      visited.add(coords.join())
+    }
+  } else {
+    ctx.fillStyle = pieceColors[piece]
+    ctx.strokeStyle = pieceColors[piece]
+    const visited = new Set()
+    for (let coords of pieces[piece][rotation]) {
+      ctx.beginPath()
+      ctx.arc(
+        x + (coords[1] - coords[0]) * pieceSettings.space,
+        y + (coords[1] + coords[0]) * pieceSettings.space,
+        pieceSettings.radius,
+        0,
+        Math.PI * 2
+      )
+      ctx.fill()
+      ctx.closePath()
+      const neighbors = [
+        [0, 1],
+        [0, -1],
+        [1, 0],
+        [-1, 0],
+      ]
+      for (let nbr of neighbors) {
+        const currY = nbr[0] + coords[0]
+        const currX = nbr[1] + coords[1]
+        if (visited.has([currY, currX].join())) {
+          ctx.beginPath()
+          ctx.moveTo(
+            x + (coords[1] - coords[0]) * pieceSettings.space,
+            y + (coords[1] + coords[0]) * pieceSettings.space
+          )
+          ctx.lineTo(
+            x + (currX - currY) * pieceSettings.space,
+            y + (currY + currX) * pieceSettings.space
+          )
+          ctx.lineWidth = pieceSettings.radius / 2
+          ctx.stroke()
+          ctx.closePath()
+        }
+      }
+      visited.add(coords.join())
     }
   }
-  for (let i = 0; i < 12; i++) {
-    if (piecePositions[i] == null) continue
-    const [rotation, row, col] = piecePositions[i]
-    const [x, y] = getBoardCoords(row, col)
-    drawPiece(i, rotation, x, y)
+}
+
+function drawBoard() {
+  if (shape === "rectangle") {
+    ctx.fillStyle = "gray"
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = "black"
+    const boardX = boardSettings.size / 2 - pieceSettings.space * 6
+    const boardY = boardSettings.size / 2 - pieceSettings.space * 3
+    ctx.fillRect(
+      boardX,
+      boardY,
+      pieceSettings.space * 12,
+      pieceSettings.space * 6
+    )
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 11; j++) {
+        ctx.fillStyle = "gray"
+        ctx.beginPath()
+        ctx.arc(
+          boardX + (j + 1) * pieceSettings.space,
+          boardY + (i + 1) * pieceSettings.space,
+          pieceSettings.radius,
+          0,
+          Math.PI * 2
+        )
+        ctx.fill()
+        ctx.closePath()
+      }
+    }
+    for (let i = 0; i < 12; i++) {
+      if (piecePositions[i] == null) continue
+      const [rotation, row, col] = piecePositions[i]
+      const [x, y] = getBoardCoords(row, col)
+      drawPiece(i, rotation, x, y)
+    }
+  } else {
+    ctx.fillStyle = "gray"
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = "black"
+    ctx.beginPath()
+    ctx.moveTo(boardSettings.size / 2, 0.5 * boardSettings.size)
+    ctx.lineTo(
+      boardSettings.size - 3.5 * pieceSettings.space,
+      boardSettings.size - 3.5 * pieceSettings.space
+    )
+    ctx.lineTo(
+      3.5 * pieceSettings.space,
+      boardSettings.size - 3.5 * pieceSettings.space
+    )
+    ctx.lineTo(boardSettings.size / 2, 0.5 * boardSettings.size)
+    ctx.closePath()
+    ctx.fill()
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        if (j + i > 9) break
+        ctx.fillStyle = "gray"
+        ctx.beginPath()
+        ctx.arc(
+          boardSettings.size / 2 + (j - i) * pieceSettings.space,
+          boardSettings.size / 2 +
+            2 * pieceSettings.space +
+            (i + j) * pieceSettings.space,
+          pieceSettings.radius,
+          0,
+          Math.PI * 2
+        )
+        ctx.fill()
+        ctx.closePath()
+      }
+    }
+    for (let i = 0; i < 12; i++) {
+      if (piecePositions[i] == null) continue
+      const [rotation, row, col] = piecePositions[i]
+      const [x, y] = getBoardCoords(row, col)
+      drawPiece(i, rotation, x, y)
+    }
   }
 }
 
@@ -334,6 +438,14 @@ drawBoard()
 drawUnusedPieces()
 
 function isInBoard(x, y) {
+  if (shape === "rectangle") {
+    if (y < boardSettings.size / 2 - pieceSettings.space * 2.5) return false
+    if (y > boardSettings.size / 2 + pieceSettings.space * 2.5) return false
+    if (x < boardSettings.size / 2 - pieceSettings.space * 5.5) return false
+    if (x > boardSettings.size / 2 + pieceSettings.space * 5.5) return false
+    console.log("is in board")
+    return true
+  }
   return (
     y < boardSettings.size - pieceSettings.space * 4 &&
     y > boardSettings.size / 2 + 1.5 * pieceSettings.space &&
@@ -345,28 +457,50 @@ function isInBoard(x, y) {
 }
 
 function getBoardDimensions(x, y) {
-  const row = Math.round(
-    (y - boardSettings.size / 2 - pieceSettings.space * 2) /
-      pieceSettings.space /
-      2 -
-      (x - boardSettings.size / 2) / pieceSettings.space / 2
-  )
-  const col = Math.round(
-    (y - boardSettings.size / 2 - pieceSettings.space * 2) /
-      pieceSettings.space /
-      2 +
-      (x - boardSettings.size / 2) / pieceSettings.space / 2
-  )
-  return [row, col]
+  if (shape === "rectangle") {
+    const xStart = boardSettings.size / 2 - pieceSettings.space * 5.5
+    const yStart = boardSettings.size / 2 - pieceSettings.space * 2.5
+    const row = Math.floor((y - yStart) / pieceSettings.space)
+    const col = Math.floor((x - xStart) / pieceSettings.space)
+    console.log({ row, col })
+    return [row, col]
+  } else {
+    const row = Math.round(
+      (y - boardSettings.size / 2 - pieceSettings.space * 2) /
+        pieceSettings.space /
+        2 -
+        (x - boardSettings.size / 2) / pieceSettings.space / 2
+    )
+    const col = Math.round(
+      (y - boardSettings.size / 2 - pieceSettings.space * 2) /
+        pieceSettings.space /
+        2 +
+        (x - boardSettings.size / 2) / pieceSettings.space / 2
+    )
+    console.log({ row, col })
+    return [row, col]
+  }
 }
 
 function getBoardCoords(row, col) {
-  const x = boardSettings.size / 2 + (col - row) * pieceSettings.space
-  const y =
-    boardSettings.size / 2 +
-    2 * pieceSettings.space +
-    (row + col) * pieceSettings.space
-  return [x, y]
+  if (shape === "rectangle") {
+    const x =
+      boardSettings.size / 2 -
+      pieceSettings.space * 5 +
+      col * pieceSettings.space
+    const y =
+      boardSettings.size / 2 -
+      pieceSettings.space * 2 +
+      row * pieceSettings.space
+    return [x, y]
+  } else {
+    const x = boardSettings.size / 2 + (col - row) * pieceSettings.space
+    const y =
+      boardSettings.size / 2 +
+      2 * pieceSettings.space +
+      (row + col) * pieceSettings.space
+    return [x, y]
+  }
 }
 
 const mouseSettings = {}
@@ -424,8 +558,8 @@ canvas.addEventListener("mousedown", (e) => {
     selectedPiece.piece = piece
     selectedPiece.rotation = rotation
     const [pieceX, pieceY] = getBoardCoords(pieceRow, pieceCol)
-    const xDiff = x - pieceX + pieceSettings.radius / 2,
-      yDiff = y - pieceY + pieceSettings.radius / 2
+    const xDiff = x - pieceX,
+      yDiff = y - pieceY
     selectedPiece.xDiff = xDiff
     selectedPiece.yDiff = yDiff
     selectedPiece.fromBoard = true
@@ -433,7 +567,7 @@ canvas.addEventListener("mousedown", (e) => {
     removeConstPiece(selectedPiece.piece)
     piecePositions[piece] = null
     canvas.addEventListener("mousemove", drawSelectedPiece)
-    addEventListener(
+    canvas.addEventListener(
       "mouseup",
       (e) => {
         const x = e.clientX - left,
@@ -502,39 +636,72 @@ rotatePiecesButton.addEventListener("click", () => {
 })
 
 function findRotation(board, row, col) {
-  const piece = board[row][col]
-  for (let rot = 0; rot < pieces[piece].length; rot++) {
-    let i = 0
-    for (; i < pieces[piece][rot].length; i++) {
-      const r = row + pieces[piece][rot][i][0]
-      const c = col + pieces[piece][rot][i][1]
-      if (r < 0 || c < 0 || r + c >= 10) break
-      if (board[r][c] !== board[row][col]) break
+  if (shape === "rectangle") {
+    const piece = board[row][col]
+    for (let rot = 0; rot < pieces[piece].length; rot++) {
+      let i = 0
+      for (; i < pieces[piece][rot].length; i++) {
+        const r = row + pieces[piece][rot][i][0]
+        const c = col + pieces[piece][rot][i][1]
+        if (r < 0 || c < 0 || r >= 5 || c >= 11) break
+        if (board[r][c] !== board[row][col]) break
+      }
+      if (i === pieces[piece][rot].length) return rot
     }
-    if (i === pieces[piece][rot].length) return rot
+    return -1
+  } else {
+    const piece = board[row][col]
+    for (let rot = 0; rot < pieces[piece].length; rot++) {
+      let i = 0
+      for (; i < pieces[piece][rot].length; i++) {
+        const r = row + pieces[piece][rot][i][0]
+        const c = col + pieces[piece][rot][i][1]
+        if (r < 0 || c < 0 || r + c >= 10) break
+        if (board[r][c] !== board[row][col]) break
+      }
+      if (i === pieces[piece][rot].length) return rot
+    }
+    return -1
   }
-  return -1
 }
 
 function makeBoardFromPossible(i) {
-  const res = []
-  for (let r = 0; r < 10; r++) {
-    res.push([])
-    for (let c = 0; c < 10; c++) {
-      res[r][c] = allPossible[i + r * 10 + c]
-    }
-  }
-  for (let r = 0; r < 10; r++) {
-    for (let c = 0; c < 10; c++) {
-      if (r + c >= 10) continue
-      if (!piecePositions[res[r][c]]) {
-        const rotation = findRotation(res, r, c)
-        if (rotation > -1)
-        piecePositions[res[r][c]] = [rotation, r, c]
+  if (shape === "rectangle") {
+    const res = []
+    for (let r = 0; r < 5; r++) {
+      res.push([])
+      for (let c = 0; c < 11; c++) {
+        res[r].push(allPossible2[i + r * 11 + c])
       }
     }
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 11; c++) {
+        if (!piecePositions[res[r][c]]) {
+          const rotation = findRotation(res, r, c)
+          if (rotation > -1) piecePositions[res[r][c]] = [rotation, r, c]
+        }
+      }
+    }
+    return res
+  } else {
+    const res = []
+    for (let r = 0; r < 10; r++) {
+      res.push([])
+      for (let c = 0; c < 10; c++) {
+        res[r][c] = allPossible[i + r * 10 + c]
+      }
+    }
+    for (let r = 0; r < 10; r++) {
+      for (let c = 0; c < 10; c++) {
+        if (r + c >= 10) continue
+        if (!piecePositions[res[r][c]]) {
+          const rotation = findRotation(res, r, c)
+          if (rotation > -1) piecePositions[res[r][c]] = [rotation, r, c]
+        }
+      }
+    }
+    return res
   }
-  return res
 }
 
 function shuffle(arr) {
@@ -581,6 +748,23 @@ newGameButton.addEventListener("click", () => {
     unusedPieces[i] = 0
     constPieces[i] = null
   }
+  drawBoard()
+  drawUnusedPieces()
+})
+
+shapeInput.addEventListener("change", (e) => {
+  shape = shapeInput.value
+  if (shape === "triangle") {
+    pieceSettings.space /= Math.sqrt(2)
+    board = new Array(10)
+    for (let i = 0; i < 10; i++) board[i] = new Array(10).fill(null)
+  } else {
+    pieceSettings.space *= Math.sqrt(2)
+    board = new Array(5)
+    for (let i = 0; i < 5; i++) board[i] = new Array(11).fill(null)
+  }
+  console.log(e)
+  console.log(shape)
   drawBoard()
   drawUnusedPieces()
 })
